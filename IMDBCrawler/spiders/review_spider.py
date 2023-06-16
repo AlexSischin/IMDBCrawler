@@ -10,7 +10,7 @@ class ReviewSpider(Spider):
 
     def parse(self, response: TextResponse, **kwargs):
         movie_refs = response.css('.lister-item-header a::attr(href)').getall()
-        review_refs = [f'{r}reviews' for r in movie_refs]
+        review_refs = [f'{r}reviews?sort=totalVotes&dir=desc&ratingFilter=0' for r in movie_refs]
         yield from response.follow_all(review_refs, self.parse_reviews)
 
         yield from response.follow_all(response.css('a.next-page'), self.parse)
