@@ -1,5 +1,7 @@
 from scrapy import Spider
 from scrapy.http import TextResponse
+from scrapy.shell import inspect_response
+from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 
 
 class ReviewSpider(Spider):
@@ -36,3 +38,24 @@ class ReviewSpider(Spider):
                 'text': text,
                 'rating': rating,
             }
+
+        more_data_key = response.css('div.load-more-data::attr(data-key)').get()
+        if more_data_key:
+            params = {
+                'sort': 'userRating',
+                'dir': 'desc',
+                'ratingFilter': '0',
+                'ref_': 'undefined',
+                'paginationKey': more_data_key
+            }
+            parsed_url = urlparse(response.url)
+            movie_id = parsed_url.path.split('/')[2]
+            next_page_url = urlunparse((
+                parsed_url.scheme,
+                parsed_url.netloc,
+                f'/title/{movie_id}/reviews/_ajax',
+                urlencode(params),
+                '',
+                ''
+            ))
+            yield response.follow(next_page_url, self.parse_reviews)
